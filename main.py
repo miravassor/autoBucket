@@ -4,26 +4,24 @@ from PIL import Image
 
 
 def process_folder(folder_path, canvas_size, output_folder):
+
     if not os.path.exists(output_folder):
-        try:
-            os.makedirs(output_folder)
-        except OSError:
-            print("Creation of the directory %s failed, check rights" % output_folder)
-            exit(1)
+        os.makedirs(output_folder, exist_ok=True)
 
     for filename in os.listdir(folder_path):
-        if filename.endswith((".png", ".jpg", ".jpeg")):
+        base_name, extension = os.path.splitext(filename)
+        if extension.lower() in (".png", ".jpg", ".jpeg"):
             img_path = os.path.join(folder_path, filename)
-            output_path = os.path.join(output_folder, filename)
+            output_path = os.path.join(output_folder, f"{base_name}.png")
             procede(img_path, canvas_size, output_path)
 
 
 def procede(img_path, canvas_size, output_path):
     try:
-        img = Image.open(img_path)
-    except IOError:
-        print("Can't open (check rights)", img_path)
-        exit(1)
+        img = Image.open(img_path).convert("RGB")
+    except (IOError, OSError) as e:
+        print(f"Error opening image '{img_path}': {e}")
+        return
 
     canvas = Image.new(img.mode, canvas_size, (255, 255, 255))
 
@@ -44,7 +42,7 @@ def procede(img_path, canvas_size, output_path):
 
     offset = ((canvas_width - new_width) // 2, (canvas_height - new_height) // 2)
     canvas.paste(resized_img, offset)
-    canvas.save(output_path)
+    canvas.save(output_path, "PNG")
 
 
 if __name__ == '__main__':
@@ -76,3 +74,4 @@ if __name__ == '__main__':
         print(f"Error creating output folder: {e}")
 
     process_folder(folder_path, canvas_size, output_folder)
+    print("Image processing complete.")
